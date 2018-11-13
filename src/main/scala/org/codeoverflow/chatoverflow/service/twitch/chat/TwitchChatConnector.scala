@@ -28,6 +28,16 @@ class TwitchChatConnector(override val sourceIdentifier: String, credentials: Cr
     twitchChatListener.addUnknownEventListener(listener)
   }
 
+  def requestURLWithoutRightsFromConnector(): Unit = {
+    try {
+      println("\nTest #3: This should also fail (no access policy in the connector called from input called from the plugin)")
+      val output = scala.io.Source.fromURL("https://skate702.de")
+      println(output != null)
+    } catch {
+      case e: Exception => println(s"No rights. Message: ${e.getMessage}")
+    }
+  }
+
   override def isRunning: Boolean = running
 
   override def init(): Unit = {

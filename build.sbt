@@ -45,6 +45,14 @@ libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.5.2"
 // PIRCBotX
 libraryDependencies += "org.pircbotx" % "pircbotx" % "2.1"
 
+// Akka Actors
+libraryDependencies ++= Seq(
+  "com.typesafe.akka" %% "akka-actor" % "2.5.18",
+  "com.typesafe.akka" %% "akka-testkit" % "2.5.18" % Test
+)
+
+
+
 
 // ---------------------------------------------------------------------------------------------------------------------
 // PLUGIN FRAMEWORK DEFINITIONS

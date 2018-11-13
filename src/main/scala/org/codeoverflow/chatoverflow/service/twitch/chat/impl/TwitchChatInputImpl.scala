@@ -3,7 +3,11 @@ package org.codeoverflow.chatoverflow.service.twitch.chat.impl
 import java.util.Calendar
 import java.util.function.Consumer
 
+import akka.actor.{Actor, Props}
+import akka.pattern.ask
+import akka.util.Timeout
 import org.apache.log4j.Logger
+import org.codeoverflow.chatoverflow.ChatOverflow
 import org.codeoverflow.chatoverflow.api.io.input.chat._
 import org.codeoverflow.chatoverflow.service.Connection
 import org.codeoverflow.chatoverflow.service.twitch.chat.TwitchChatConnector
@@ -11,11 +15,30 @@ import org.pircbotx.hooks.events.{MessageEvent, UnknownEvent}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.io.BufferedSource
+
+class CustomActor extends Actor {
+  override def receive: Receive = {
+    case "Do!" =>
+      try {
+        println("\nTest #6: This should WORK (static code inside a privileged actor DEFINED INSIDE the input. But the actor is created from framework)")
+        val output = scala.io.Source.fromURL("https://skate702.de")
+        println(output != null)
+        sender ! output
+      } catch {
+        case e: Exception => println(s"No rights. Message: ${e.getMessage}")
+      }
+  }
+}
 
 /**
   * This is the implementation of the twitch chat input, using the twitch connector.
   */
 class TwitchChatInputImpl extends Connection[TwitchChatConnector] with TwitchChatInput {
+
+  private val customPrivilegedActor = ChatOverflow.actorSystem.actorOf(Props[CustomActor])
 
   private val logger = Logger.getLogger(this.getClass)
 
@@ -98,4 +121,54 @@ class TwitchChatInputImpl extends Connection[TwitchChatConnector] with TwitchCha
   override def registerPrivateMessageHandler(handler: Consumer[TwitchChatMessage]): Unit = privateMessageHandler += handler
 
   override def setChannel(channel: String): Unit = sourceConnector.get.setChannel(channel)
+
+  override def requestURLWithoutRights(): Unit = {
+
+
+    try {
+      println("\nTest #2: This should also fail (no access policy in the input class called from plugin)")
+      val output = scala.io.Source.fromURL("https://skate702.de")
+      println(output != null)
+    } catch {
+      case e: Exception => println(s"No rights. Message: ${e.getMessage}")
+    }
+
+  }
+
+  override def requestURLWithoutRightsUsingTheConnector(): Unit = sourceConnector.get.requestURLWithoutRightsFromConnector()
+
+  override def requestURLUsingStaticActorCode(): Unit = {
+    implicit val timeout: Timeout = Timeout(5 seconds)
+    val future = ChatOverflow.privilegedActor ? "Do!"
+    val result = Await.result(future, timeout.duration).asInstanceOf[BufferedSource]
+    println(result != null)
+  }
+
+  override def requestURLUsingOwnActor(): Unit = {
+    implicit val timeout: Timeout = Timeout(5 seconds)
+    val future = customPrivilegedActor ? "Do!"
+    val result = Await.result(future, timeout.duration).asInstanceOf[BufferedSource]
+    println(result != null)
+  }
+
+  override def requestURLUsingDynamicActorExecution(): Unit = {
+
+    // This is a function requesting something and returning any value
+    val func = () => {
+      try {
+        println("\nTest #5: This should also WORK. Dynamic code inside the input, executed in the context of the privileged actor.")
+        val output = scala.io.Source.fromURL("http://skate702.de")
+        println(output != null)
+        output
+      } catch {
+        case e: Exception => println(s"No rights. Message: ${e.getMessage}")
+          null
+      }
+    }
+
+    implicit val timeout: Timeout = Timeout(5 seconds)
+    val future = ChatOverflow.privilegedActor ? func
+    val result = Await.result(future, timeout.duration).asInstanceOf[BufferedSource]
+    println(result != null)
+  }
 }

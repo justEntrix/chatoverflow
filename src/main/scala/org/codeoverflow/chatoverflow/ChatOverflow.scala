@@ -3,6 +3,7 @@ package org.codeoverflow.chatoverflow
 import java.io.File
 import java.security.Policy
 
+import akka.actor.{ActorRef, ActorSystem, Props}
 import org.apache.log4j.Logger
 import org.codeoverflow.chatoverflow.configuration._
 import org.codeoverflow.chatoverflow.framework.{PluginFramework, PluginManagerImpl, SandboxSecurityPolicy}
@@ -20,6 +21,10 @@ object ChatOverflow {
   private var pluginInstanceRegistry: PluginInstanceRegistry = _
   private var configurationService: ConfigurationService = _
   private var credentialsService: CredentialsService = _
+
+  // Security Testing
+  val actorSystem = ActorSystem("MAIN")
+  val privilegedActor: ActorRef = actorSystem.actorOf(Props[PrivilegedActor])
 
   // TODO: Should be modeled and refactored again?
 
