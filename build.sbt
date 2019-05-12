@@ -40,6 +40,8 @@ libraryDependencies ++= Seq(
 
 // JSON Lib (Jackson)
 libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.5.2"
+// JSON Lib (Gson)
+libraryDependencies += "com.google.code.gson" % "gson" % "2.2.4"
 
 // PIRCBotX
 libraryDependencies += "org.pircbotx" % "pircbotx" % "2.1"
@@ -57,7 +59,8 @@ libraryDependencies ++= Seq(
 libraryDependencies ++= Seq(
   "com.lightbend.akka" %% "akka-stream-alpakka-ftp" % "1.0.0"
 )
-
+// Websocket
+libraryDependencies += "com.github.andyglow" %% "websocket-scala-client"% "0.2.4"
 
 // ---------------------------------------------------------------------------------------------------------------------
 // PLUGIN FRAMEWORK DEFINITIONS
