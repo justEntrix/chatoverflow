@@ -8,7 +8,7 @@ import org.codeoverflow.chatoverflow.api.io.dto.chat.twitch.{TwitchChatEmoticon,
 import org.codeoverflow.chatoverflow.api.io.dto.chat.{Channel, ChatEmoticon}
 import org.codeoverflow.chatoverflow.api.io.input.chat._
 import org.codeoverflow.chatoverflow.registry.Impl
-import org.codeoverflow.chatoverflow.requirement.Connection
+import org.codeoverflow.chatoverflow.requirement.InputImpl
 import org.codeoverflow.chatoverflow.requirement.service.twitch.chat
 import org.pircbotx.hooks.events.{MessageEvent, UnknownEvent}
 
@@ -19,7 +19,10 @@ import scala.collection.mutable.ListBuffer
   * This is the implementation of the twitch chat input, using the twitch connector.
   */
 @Impl(impl = classOf[TwitchChatInput], connector = classOf[chat.TwitchChatConnector])
-class TwitchChatInputImpl extends Connection[chat.TwitchChatConnector] with TwitchChatInput with WithLogger {
+class TwitchChatInputImpl extends InputImpl[chat.TwitchChatConnector] with TwitchChatInput with WithLogger {
+
+  override protected var optionalContent: List[String] = List()
+  override protected var requiredContent: List[String] = List()
 
   private val messages: ListBuffer[TwitchChatMessage] = ListBuffer[TwitchChatMessage]()
   private val privateMessages: ListBuffer[TwitchChatMessage] = ListBuffer[TwitchChatMessage]()
@@ -30,17 +33,10 @@ class TwitchChatInputImpl extends Connection[chat.TwitchChatConnector] with Twit
   private val messageHandler = ListBuffer[Consumer[TwitchChatMessage]]()
   private val privateMessageHandler = ListBuffer[Consumer[TwitchChatMessage]]()
 
-  override def init(): Boolean = {
-
-    // Add the own message handler to the twitch connector
-    if (sourceConnector.isDefined) {
-      sourceConnector.get.addMessageEventListener(onMessage)
-      sourceConnector.get.addUnknownEventListener(onUnknown)
-      sourceConnector.get.init()
-    } else {
-      logger warn "Source connector not set."
-      false
-    }
+  override def start(): Boolean = {
+    sourceConnector.get.addMessageEventListener(onMessage)
+    sourceConnector.get.addUnknownEventListener(onUnknown)
+    true
   }
 
   private def onMessage(event: MessageEvent): Unit = {
